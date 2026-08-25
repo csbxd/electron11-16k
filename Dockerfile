@@ -7,6 +7,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
+RUN echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' \
+	| debconf-set-selections
+
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		ca-certificates \
