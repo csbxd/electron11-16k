@@ -14,9 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  sync:
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +33,60 @@ jobs:
           docker buildx build --load \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
+            --build-arg USER_ID="$(id -u)" \
+            --tag electron11-16k-builder .
+
+      - name: Restore or prepare pinned source tree
+        id: source-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/checkout
+            .build/depot_tools
+          key: electron11-source-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}
+
+      - name: Sync sources and apply 16K backports
+        run: |
+          docker run --rm --shm-size=2g \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --workdir /workspace \
+            --env BUILD_ROOT=/workspace/.build \
+            electron11-16k-builder \
+            ./scripts/sync.sh
+
+  build:
+    needs: sync
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          docker system prune --all --force
+          df -h /
+
+      - name: Restore pinned source tree
+        id: source-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/checkout
+            .build/depot_tools
+          key: electron11-source-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}
+
+      - name: Require an exact source cache hit
+        if: steps.source-cache.outputs.cache-hit != 'true'
+        run: |
+          echo 'pinned source cache is missing' >&2
+          exit 1
+
+      - name: Load pinned Ubuntu 18.04 toolchain image
+        run: |
+          docker buildx build --load \
+            --cache-from type=gha \
             --build-arg USER_ID="$(id -u)" \
             --tag electron11-16k-builder .
 
