@@ -42,10 +42,10 @@ ELECTRON_USE_THREE_WAY_MERGE_FOR_PATCHES=1 \
 	gclient sync --no-history --with_branch_heads --with_tags
 
 cd "${checkout_root}/src"
-git apply --check "${repo_root}/patches/chromium-87-partitionalloc-linux-arm64-16k.patch"
-git apply "${repo_root}/patches/chromium-87-partitionalloc-linux-arm64-16k.patch"
-git apply --check "${repo_root}/patches/chromium-87-linux-arm64-link-alignment.patch"
-git apply "${repo_root}/patches/chromium-87-linux-arm64-link-alignment.patch"
+patch --batch --forward -p1 \
+	< "${repo_root}/patches/chromium-87-partitionalloc-linux-arm64-16k.patch"
+patch --batch --forward -p1 \
+	< "${repo_root}/patches/chromium-87-linux-arm64-link-alignment.patch"
 
 grep -q 'struct PageCharacteristics' \
 	base/allocator/partition_allocator/page_allocator_constants.h
