@@ -44,6 +44,8 @@ jobs:
             .build/checkout
             .build/depot_tools
           key: electron11-source-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}
+          restore-keys: |
+            electron11-source-partial-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}-
 
       - name: Sync sources and apply 16K backports
         run: |
@@ -53,6 +55,15 @@ jobs:
             --env BUILD_ROOT=/workspace/.build \
             electron11-16k-builder \
             ./scripts/sync.sh
+
+      - name: Save resumable partial source tree after failure
+        if: failure() && steps.source-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .build/checkout
+            .build/depot_tools
+          key: electron11-source-partial-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}-${{ github.run_id }}
 
   build:
     needs: sync
