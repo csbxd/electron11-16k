@@ -4,8 +4,8 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
@@ -23,7 +23,7 @@ RUN apt-get update \
 		wget \
 		xz-utils \
 		zip \
-	&& locale-gen C.UTF-8 \
+	&& locale-gen en_US.UTF-8 \
 	&& curl -fsSL \
 		'https://chromium.googlesource.com/chromium/src/+/refs/tags/87.0.4280.141/build/install-build-deps.sh?format=TEXT' \
 		| base64 --decode > /tmp/install-build-deps.sh \
