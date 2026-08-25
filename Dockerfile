@@ -6,9 +6,12 @@ ARG GROUP_ID=1001
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+ENV TZ=Etc/UTC
 
 RUN echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' \
-	| debconf-set-selections
+	| debconf-set-selections \
+	&& echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections \
+	&& echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
