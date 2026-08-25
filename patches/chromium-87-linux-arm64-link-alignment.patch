@@ -1,0 +1,31 @@
+From 97193a64b431ea6070230d6a3142afe93ce3bbb2 Mon Sep 17 00:00:00 2001
+From: Dominik Infuehr <dinfuehr@chromium.org>
+Date: Tue, 22 Mar 2022 17:33:03 +0000
+Subject: [PATCH] [Backport] Do not force 4K linker pages on Linux ARM64
+
+Chromium CL 3542265 moved the 4K max-page-size linker flag to Android.
+Chromium 87 has an older GN layout, so express the same behavior by limiting
+the existing flag to Android. Linux ARM64 then retains LLD's 64K maximum page
+size and produces binaries usable on 4K, 16K, and 64K kernels.
+
+Change-Id: I8cf3664849d98bcb984f339ebf9076d1cfaf5701
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/3542265
+---
+ build/config/compiler/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index c4c7b1476f8b..1a2fb740d0b3 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -401,7 +401,7 @@ config("compiler") {
+   # ------------------------------------
+   if ((is_posix || is_fuchsia) && use_lld) {
+     ldflags += [ "-fuse-ld=lld" ]
+-    if (current_cpu == "arm64") {
++    if (current_cpu == "arm64" && is_android) {
+       # Reduce the page size from 65536 in order to reduce binary size slightly
+       # by shrinking the alignment gap between segments. This also causes all
+       # segments to be mapped adjacently, which breakpad relies on.
+-- 
+2.47.3

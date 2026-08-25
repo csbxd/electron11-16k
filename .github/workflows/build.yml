@@ -1,0 +1,93 @@
+name: Build Electron 11 ARM64 16K
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: electron11-arm64-16k-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          docker system prune --all --force
+          df -h /
+
+      - name: Build pinned Ubuntu 18.04 toolchain image
+        run: |
+          docker build \
+            --build-arg USER_ID="$(id -u)" \
+            --build-arg GROUP_ID="$(id -g)" \
+            --tag electron11-16k-builder .
+
+      - name: Build Electron 11.3.0 for ARM64
+        run: |
+          docker run --rm --shm-size=2g \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --workdir /workspace \
+            --env BUILD_ROOT=/workspace/.build \
+            electron11-16k-builder \
+            ./scripts/build.sh
+
+      - name: Verify and package runtime
+        run: ./scripts/package-runtime.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: electron-v11.3.0-linux-arm64-16k
+          path: |
+            dist/electron-v11.3.0-linux-arm64-16k.tar.xz
+            dist/electron-v11.3.0-linux-arm64-16k.tar.xz.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  smoke-arm64:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: electron-v11.3.0-linux-arm64-16k
+          path: dist
+      - name: Run on native ARM64
+        run: |
+          mkdir -p dist/runtime
+          tar -xJf dist/electron-v11.3.0-linux-arm64-16k.tar.xz \
+            -C dist/runtime
+          python3 scripts/verify-runtime.py --run dist/runtime
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: smoke-arm64
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: electron-v11.3.0-linux-arm64-16k
+          path: dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Electron ${GITHUB_REF_NAME#v} for ARM64 16K" \
+            --generate-notes \
+            dist/electron-v11.3.0-linux-arm64-16k.tar.xz \
+            dist/electron-v11.3.0-linux-arm64-16k.tar.xz.sha256
