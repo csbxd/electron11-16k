@@ -29,11 +29,11 @@ jobs:
 
       - name: Build pinned Ubuntu 18.04 toolchain image
         run: |
+          id
           docker buildx build --load \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             --build-arg USER_ID="$(id -u)" \
-            --build-arg GROUP_ID="$(id -g)" \
             --tag electron11-16k-builder .
 
       - name: Build Electron 11.3.0 for ARM64

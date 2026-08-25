@@ -1,7 +1,6 @@
 FROM ubuntu:18.04
 
 ARG USER_ID=1001
-ARG GROUP_ID=1001
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
@@ -49,7 +48,7 @@ RUN apt-get update \
 	&& rm -f node-v12.18.3-linux-x64.tar.xz /tmp/install-build-deps.sh \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --gid "${GROUP_ID}" builder \
+RUN groupadd builder \
 	&& useradd --uid "${USER_ID}" --gid builder --create-home --shell /bin/bash builder \
 	&& echo 'builder ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/builder
 
