@@ -24,6 +24,7 @@ RUN apt-get update \
 		python-pip \
 		python-setuptools \
 		sudo \
+		tzdata \
 		unzip \
 		wget \
 		xz-utils \
