@@ -1,0 +1,67 @@
+From: electron11-16k maintainers
+Subject: [PATCH] PartitionAlloc: keep the 16K backport C++14-compatible
+
+Chromium 87 still builds PartitionAlloc and PDFium with C++14.  The Fedora
+backport was produced in a newer C++17 build environment and uses nested
+namespace definitions, which Clang 12 rejects under -std=c++14 -Werror.
+
+Use the equivalent C++14 namespace syntax in both allocator copies.
+---
+ base/allocator/partition_allocator/page_allocator_constants.h     | 6 ++++--
+ .../base/allocator/partition_allocator/page_allocator_constants.h  | 8 ++++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/base/allocator/partition_allocator/page_allocator_constants.h b/base/allocator/partition_allocator/page_allocator_constants.h
+--- a/base/allocator/partition_allocator/page_allocator_constants.h
++++ b/base/allocator/partition_allocator/page_allocator_constants.h
+@@ -36,17 +36,19 @@
+ #include <unistd.h>
+ #include <atomic>
+ 
+-namespace base::internal {
++namespace base {
++namespace internal {
+ 
+ // Holds the current page size and shift, where size = 1 << shift
+ // Use PageAllocationGranularity(), PageAllocationGranularityShift()
+ // to initialize and retrieve these values safely.
+ struct PageCharacteristics {
+   std::atomic<int> size;
+   std::atomic<int> shift;
+ };
+ extern PageCharacteristics page_characteristics;
+ 
+-}  // namespace base::internal
++}  // namespace internal
++}  // namespace base
+ 
+ #else
+diff --git a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
+--- a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
++++ b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
+@@ -36,17 +36,21 @@
+ #include <unistd.h>
+ #include <atomic>
+ 
+-namespace pdfium::base::internal {
++namespace pdfium {
++namespace base {
++namespace internal {
+ 
+ // Holds the current page size and shift, where size = 1 << shift
+ // Use PageAllocationGranularity(), PageAllocationGranularityShift()
+ // to initialize and retrieve these values safely.
+ struct PageCharacteristics {
+   std::atomic<int> size;
+   std::atomic<int> shift;
+ };
+ extern PageCharacteristics page_characteristics;
+ 
+-}  // namespace base::internal
++}  // namespace internal
++}  // namespace base
++}  // namespace pdfium
+ 
+ #else
+-- 
+2.51.0
