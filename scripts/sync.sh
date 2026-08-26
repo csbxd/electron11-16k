@@ -35,12 +35,6 @@ if [[ ! -d "${checkout_root}/src/electron/.git" ]]; then
 		"${checkout_root}/src/electron"
 fi
 
-# Electron's old private sysroot bucket no longer exists. Chromium 87's
-# official ARM64 sysroot is still available; Electron only needs the
-# architecture-independent libnotify headers in addition to that sysroot.
-sed -i '/^sysroot\.patch$/d' \
-	"${checkout_root}/src/electron/patches/chromium/.patches"
-
 cd "${checkout_root}"
 gclient config \
 	--name src/electron \
@@ -50,8 +44,15 @@ gclient config \
 	--custom-var=download_external_binaries=False \
 	https://github.com/electron/electron.git
 
-ELECTRON_USE_THREE_WAY_MERGE_FOR_PATCHES=1 \
-	gclient sync --no-history
+gclient sync --no-history --nohooks --reset --force
+
+# Electron's old private sysroot bucket no longer exists. Chromium 87's
+# official ARM64 sysroot is still available; Electron only needs the
+# architecture-independent libnotify headers in addition to that sysroot.
+sed -i '/^sysroot\.patch$/d' \
+	"${checkout_root}/src/electron/patches/chromium/.patches"
+
+ELECTRON_USE_THREE_WAY_MERGE_FOR_PATCHES=1 gclient runhooks
 
 cp -a /usr/include/libnotify \
 	"${checkout_root}/src/build/linux/debian_sid_arm64-sysroot/usr/include/"
