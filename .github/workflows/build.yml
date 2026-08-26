@@ -57,7 +57,7 @@ jobs:
         id: electron-build
         continue-on-error: true
         run: |
-          timeout --signal=TERM --kill-after=5m 120m \
+          timeout --signal=INT --kill-after=30s 145m \
             docker run --rm --shm-size=2g \
             --volume "${GITHUB_WORKSPACE}:/workspace" \
             --workdir /workspace \
