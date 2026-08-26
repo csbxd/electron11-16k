@@ -10,8 +10,8 @@ build_root="${BUILD_ROOT:-${repo_root}/.build}"
 checkout_root="${build_root}/checkout"
 depot_tools_root="${build_root}/depot_tools"
 sync_marker="${checkout_root}/.electron11-16k-synced"
-arm64_sysroot_header="${checkout_root}/src/build/linux/debian_sid_arm64-sysroot/usr/include/stdio.h"
-yarn_integrity="${checkout_root}/src/electron/node_modules/.yarn-integrity"
+arm64_sysroot="${checkout_root}/src/build/linux/debian_sid_arm64-sysroot"
+electron_node_modules="${checkout_root}/src/electron/node_modules"
 
 if [[ -f "${sync_marker}" ]]; then
 	echo "using cached pinned Electron source tree"
@@ -46,7 +46,7 @@ gclient config \
 	--custom-var=download_external_binaries=False \
 	https://github.com/electron/electron.git
 
-if [[ -f "${arm64_sysroot_header}" && -f "${yarn_integrity}" ]]; then
+if [[ -d "${arm64_sysroot}" && -d "${electron_node_modules}" ]]; then
 	echo "using cached source tree with completed Electron hooks"
 else
 	gclient sync --no-history --nohooks --reset --force
