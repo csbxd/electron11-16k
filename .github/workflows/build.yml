@@ -14,60 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sync:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 240
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          docker system prune --all --force
-          df -h /
-
-      - name: Build pinned Ubuntu 18.04 toolchain image
-        run: |
-          id
-          docker buildx build --load \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=max \
-            --build-arg USER_ID="$(id -u)" \
-            --tag electron11-16k-builder .
-
-      - name: Restore or prepare pinned source tree
-        id: source-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build/checkout
-            .build/depot_tools
-          key: electron11-source-v3-11.3.0-arm64-16k1
-          restore-keys: |
-            electron11-source-partial-v3-11.3.0-arm64-16k1-
-            electron11-source-partial-v2-
-
-      - name: Sync sources and apply 16K backports
-        run: |
-          docker run --rm --shm-size=2g \
-            --volume "${GITHUB_WORKSPACE}:/workspace" \
-            --workdir /workspace \
-            --env BUILD_ROOT=/workspace/.build \
-            electron11-16k-builder \
-            ./scripts/sync.sh
-
-      - name: Save resumable partial source tree after failure
-        if: failure() && steps.source-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .build/checkout
-            .build/depot_tools
-          key: electron11-source-partial-v3-11.3.0-arm64-16k1-${{ github.run_id }}
-
   build:
-    needs: sync
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
@@ -80,27 +27,22 @@ jobs:
           docker system prune --all --force
           df -h /
 
-      - name: Restore pinned source tree
-        id: source-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build/checkout
-            .build/depot_tools
-          key: electron11-source-v3-11.3.0-arm64-16k1
-
-      - name: Require an exact source cache hit
-        if: steps.source-cache.outputs.cache-hit != 'true'
-        run: |
-          echo 'pinned source cache is missing' >&2
-          exit 1
-
       - name: Load pinned Ubuntu 18.04 toolchain image
         run: |
           docker buildx build --load \
             --cache-from type=gha \
+            --cache-to type=gha,mode=max \
             --build-arg USER_ID="$(id -u)" \
             --tag electron11-16k-builder .
+
+      - name: Sync sources and apply 16K backports
+        run: |
+          docker run --rm --shm-size=2g \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --workdir /workspace \
+            --env BUILD_ROOT=/workspace/.build \
+            electron11-16k-builder \
+            ./scripts/sync.sh
 
       - name: Build Electron 11.3.0 for ARM64
         run: |
