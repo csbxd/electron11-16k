@@ -18,6 +18,7 @@ RUN apt-get update \
 		curl \
 		git \
 		git-lfs \
+		libnotify-dev \
 		locales \
 		lsb-release \
 		python \

@@ -10,6 +10,8 @@ build_root="${BUILD_ROOT:-${repo_root}/.build}"
 checkout_root="${build_root}/checkout"
 depot_tools_root="${build_root}/depot_tools"
 sync_marker="${checkout_root}/.electron11-16k-synced"
+arm64_sysroot_header="${checkout_root}/src/build/linux/debian_sid_arm64-sysroot/usr/include/stdio.h"
+yarn_integrity="${checkout_root}/src/electron/node_modules/.yarn-integrity"
 
 if [[ -f "${sync_marker}" ]]; then
 	echo "using cached pinned Electron source tree"
@@ -44,15 +46,19 @@ gclient config \
 	--custom-var=download_external_binaries=False \
 	https://github.com/electron/electron.git
 
-gclient sync --no-history --nohooks --reset --force
+if [[ -f "${arm64_sysroot_header}" && -f "${yarn_integrity}" ]]; then
+	echo "using cached source tree with completed Electron hooks"
+else
+	gclient sync --no-history --nohooks --reset --force
 
-# Electron's old private sysroot bucket no longer exists. Chromium 87's
-# official ARM64 sysroot is still available; Electron only needs the
-# architecture-independent libnotify headers in addition to that sysroot.
-sed -i '/^sysroot\.patch$/d' \
-	"${checkout_root}/src/electron/patches/chromium/.patches"
+	# Electron's old private sysroot bucket no longer exists. Chromium 87's
+	# official ARM64 sysroot is still available; Electron only needs the
+	# architecture-independent libnotify headers in addition to that sysroot.
+	sed -i '/^sysroot\.patch$/d' \
+		"${checkout_root}/src/electron/patches/chromium/.patches"
 
-ELECTRON_USE_THREE_WAY_MERGE_FOR_PATCHES=1 gclient runhooks
+	ELECTRON_USE_THREE_WAY_MERGE_FOR_PATCHES=1 gclient runhooks
+fi
 
 cp -a /usr/include/libnotify \
 	"${checkout_root}/src/build/linux/debian_sid_arm64-sysroot/usr/include/"
