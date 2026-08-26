@@ -69,12 +69,18 @@ patch --batch --forward -p1 \
 patch --batch --forward -p1 \
 	< "${repo_root}/patches/chromium-87-partitionalloc-cxx14-namespace.patch"
 patch --batch --forward -p1 \
+	< "${repo_root}/patches/chromium-87-partitionalloc-style.patch"
+patch --batch --forward -p1 \
 	< "${repo_root}/patches/chromium-87-linux-arm64-link-alignment.patch"
 
 grep -q 'struct PageCharacteristics' \
 	base/allocator/partition_allocator/page_allocator_constants.h
 ! grep -Rq 'namespace \(base\|pdfium::base\)::internal' \
 	base/allocator/partition_allocator/page_allocator_constants.h \
+	third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
+grep -q 'constexpr PageCharacteristics();' \
+	base/allocator/partition_allocator/page_allocator_constants.h
+grep -q 'constexpr PageCharacteristics();' \
 	third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
 grep -q 'current_cpu == "arm64" && is_android' build/config/compiler/BUILD.gn
 

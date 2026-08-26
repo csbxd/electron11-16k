@@ -44,14 +44,36 @@ jobs:
             electron11-16k-builder \
             ./scripts/sync.sh
 
+      - name: Restore partial Ninja output
+        uses: actions/cache/restore@v4
+        with:
+          path: .build/checkout/src/out/Release
+          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-empty
+          restore-keys: |
+            electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-
+
       - name: Build Electron 11.3.0 for ARM64
+        id: electron-build
+        continue-on-error: true
         run: |
-          docker run --rm --shm-size=2g \
+          timeout --signal=TERM --kill-after=5m 120m \
+            docker run --rm --shm-size=2g \
             --volume "${GITHUB_WORKSPACE}:/workspace" \
             --workdir /workspace \
             --env BUILD_ROOT=/workspace/.build \
             electron11-16k-builder \
             ./scripts/build.sh
+
+      - name: Save partial Ninja output
+        if: steps.electron-build.outcome == 'failure'
+        uses: actions/cache/save@v4
+        with:
+          path: .build/checkout/src/out/Release
+          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Propagate build failure
+        if: steps.electron-build.outcome == 'failure'
+        run: exit 1
 
       - name: Verify and package runtime
         run: ./scripts/package-runtime.sh

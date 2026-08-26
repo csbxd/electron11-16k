@@ -1,0 +1,47 @@
+From: electron11-16k maintainers
+Subject: [PATCH] PartitionAlloc: satisfy Chromium 87's complex-struct check
+
+Chromium 87's Clang style plugin requires structures containing atomics to
+declare an explicit out-of-line constructor.  Newer Chromium versions no
+longer apply this exact check to PageCharacteristics.
+
+Add constexpr out-of-line constructors to both allocator copies.  constexpr
+also keeps the global instances constant-initialized under
+-Wglobal-constructors.
+---
+ .../partition_allocator/page_allocator_constants.h               | 1 +
+ .../partition_allocator/partition_address_space.cc                | 3 +++
+ .../partition_allocator/page_allocator.cc                         | 3 +++
+ .../partition_allocator/page_allocator_constants.h                | 1 +
+ 4 files changed, 8 insertions(+)
+
+diff --git a/base/allocator/partition_allocator/page_allocator_constants.h b/base/allocator/partition_allocator/page_allocator_constants.h
+--- a/base/allocator/partition_allocator/page_allocator_constants.h
++++ b/base/allocator/partition_allocator/page_allocator_constants.h
+@@ -45,1 +45,2 @@
++  constexpr PageCharacteristics();
+   std::atomic<int> size;
+diff --git a/base/allocator/partition_allocator/partition_address_space.cc b/base/allocator/partition_allocator/partition_address_space.cc
+--- a/base/allocator/partition_allocator/partition_address_space.cc
++++ b/base/allocator/partition_allocator/partition_address_space.cc
+@@ -81,1 +81,4 @@
++constexpr PageCharacteristics::PageCharacteristics()
++    : size(0), shift(0) {}
++
+ PageCharacteristics page_characteristics;
+diff --git a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator.cc b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator.cc
+--- a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator.cc
++++ b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator.cc
+@@ -262,1 +262,4 @@
++constexpr PageCharacteristics::PageCharacteristics()
++    : size(0), shift(0) {}
++
+ PageCharacteristics page_characteristics;
+diff --git a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
+--- a/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
++++ b/third_party/pdfium/third_party/base/allocator/partition_allocator/page_allocator_constants.h
+@@ -46,1 +46,2 @@
++  constexpr PageCharacteristics();
+   std::atomic<int> size;
+-- 
+2.51.0

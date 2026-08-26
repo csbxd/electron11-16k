@@ -9,8 +9,8 @@ The build applies two upstream-derived backports:
 
 - Chromium CL 3545665 makes the Chromium and PDFium PartitionAlloc copies use
   the runtime system page size. The patch is Fedora's Chromium 87 adaptation.
-- A small follow-up expresses the backport's nested namespaces in C++14 syntax,
-  as required by Chromium 87's PDFium build.
+- A small follow-up adapts the backport to Chromium 87's C++14 and older style
+  checks while keeping its global page characteristics constant-initialized.
 - Chromium CL 3542265 stops forcing 4 KiB linker pages on Linux ARM64. The
   small patch here is adapted to Chromium 87's older GN layout.
 
@@ -30,6 +30,11 @@ The build pins:
 Run the GitHub Actions workflow manually, or push a tag such as
 `v11.3.0-16k.1`. Tagged builds create a GitHub Release containing
 `electron-v11.3.0-linux-arm64-16k.tar.xz` and its SHA-256 checksum.
+
+The historical Chromium checkout and a full optimized build can exceed one
+standard GitHub-hosted runner's six-hour lifetime. CI therefore keeps source
+sync and compilation on the same runner, limits each Ninja slice to two hours,
+and resumes completed Ninja outputs from an exact-input Actions cache.
 
 ## Verification
 
