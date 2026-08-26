@@ -28,7 +28,7 @@ export CHROMIUM_BUILDTOOLS_PATH="${checkout_root}/src/buildtools"
 had_ninja_log=false
 [[ -f out/Release/.ninja_log ]] && had_ninja_log=true
 
-gn gen out/Release --args='import("//electron/build/args/release.gn") target_cpu="arm64" fatal_linker_warnings=false enable_linux_installer=false symbol_level=0 blink_symbol_level=0'
+gn gen out/Release --args='import("//electron/build/args/release.gn") target_cpu="arm64" clang_use_chrome_plugins=false fatal_linker_warnings=false enable_linux_installer=false symbol_level=0 blink_symbol_level=0'
 
 if ${had_ninja_log}; then
 	# A restored Actions cache predates this runner's fresh source checkout.

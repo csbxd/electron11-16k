@@ -48,9 +48,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .build/checkout/src/out/Release
-          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-empty
+          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-empty
           restore-keys: |
-            electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-
+            electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-
+            electron11-arm64-16k-out-
 
       - name: Build Electron 11.3.0 for ARM64
         id: electron-build
@@ -69,7 +70,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .build/checkout/src/out/Release
-          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'scripts/build.sh', 'patches/*.patch') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Propagate build failure
         if: steps.electron-build.outcome == 'failure'

@@ -9,8 +9,9 @@ The build applies two upstream-derived backports:
 
 - Chromium CL 3545665 makes the Chromium and PDFium PartitionAlloc copies use
   the runtime system page size. The patch is Fedora's Chromium 87 adaptation.
-- A small follow-up adapts the backport to Chromium 87's C++14 and older style
-  checks while keeping its global page characteristics constant-initialized.
+- Small follow-ups adapt the backport to Chromium 87's C++14 syntax while
+  keeping its global page characteristics constant-initialized. The obsolete
+  Chrome-only style plugin is disabled; normal compiler warnings remain fatal.
 - Chromium CL 3542265 stops forcing 4 KiB linker pages on Linux ARM64. The
   small patch here is adapted to Chromium 87's older GN layout.
 
