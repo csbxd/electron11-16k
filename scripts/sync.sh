@@ -46,6 +46,7 @@ gclient config \
 	--name src/electron \
 	--unmanaged \
 	--custom-var=checkout_arm64=True \
+	--custom-var=checkout_traffic_annotation_tools=False \
 	--custom-var=download_external_binaries=False \
 	https://github.com/electron/electron.git
 

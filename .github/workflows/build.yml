@@ -43,9 +43,10 @@ jobs:
           path: |
             .build/checkout
             .build/depot_tools
-          key: electron11-source-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}
+          key: electron11-source-v3-11.3.0-arm64-16k1
           restore-keys: |
-            electron11-source-partial-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}-
+            electron11-source-partial-v3-11.3.0-arm64-16k1-
+            electron11-source-partial-v2-
 
       - name: Sync sources and apply 16K backports
         run: |
@@ -63,7 +64,7 @@ jobs:
           path: |
             .build/checkout
             .build/depot_tools
-          key: electron11-source-partial-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}-${{ github.run_id }}
+          key: electron11-source-partial-v3-11.3.0-arm64-16k1-${{ github.run_id }}
 
   build:
     needs: sync
@@ -86,7 +87,7 @@ jobs:
           path: |
             .build/checkout
             .build/depot_tools
-          key: electron11-source-v2-${{ hashFiles('patches/**', 'scripts/sync.sh', 'Dockerfile') }}
+          key: electron11-source-v3-11.3.0-arm64-16k1
 
       - name: Require an exact source cache hit
         if: steps.source-cache.outputs.cache-hit != 'true'
