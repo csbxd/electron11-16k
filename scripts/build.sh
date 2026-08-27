@@ -25,26 +25,7 @@ grep -q 'current_cpu == "arm64" && is_android' build/config/compiler/BUILD.gn
 
 export CHROMIUM_BUILDTOOLS_PATH="${checkout_root}/src/buildtools"
 
-had_ninja_log=false
-[[ -f out/Release/.ninja_log ]] && had_ninja_log=true
-
 gn gen out/Release --args='import("//electron/build/args/release.gn") target_cpu="arm64" clang_use_chrome_plugins=false fatal_linker_warnings=false enable_linux_installer=false symbol_level=0 blink_symbol_level=0'
-
-if ${had_ninja_log}; then
-	# A restored Actions cache predates this runner's fresh source checkout.
-	# Refresh only outputs that Ninja previously completed; its command hashes
-	# still force rebuilds when a command actually changed.
-	restored_outputs=0
-	while IFS=$'\t' read -r _ _ _ output _; do
-		[[ -n "${output}" && -e "out/Release/${output}" ]] || continue
-		touch "out/Release/${output}"
-		((restored_outputs += 1))
-	done < <(tail -n +2 out/Release/.ninja_log | sort -t $'\t' -k4,4 -u)
-	# Ninja's v5 log stores each output's mtime. Keep those records in sync
-	# with the refreshed files or restat edges are treated as externally changed.
-	ninja -C out/Release -t restat
-	echo "refreshed ${restored_outputs} cached Ninja outputs"
-fi
 
 ninja -C out/Release electron -j "$(nproc)"
 python electron/script/strip-binaries.py \

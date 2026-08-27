@@ -53,6 +53,9 @@ jobs:
             electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-
             electron11-arm64-16k-out-
 
+      - name: Refresh restored Ninja metadata
+        run: ./scripts/restore-ninja-output.sh
+
       - name: Build Electron 11.3.0 for ARM64
         id: electron-build
         continue-on-error: true

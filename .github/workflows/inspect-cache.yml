@@ -49,6 +49,9 @@ jobs:
           print("\n".join(entries[-20:]))
           PY
 
+      - name: Refresh restored Ninja metadata
+        run: ./scripts/restore-ninja-output.sh
+
       - name: Upload Ninja log
         uses: actions/upload-artifact@v4
         with:
