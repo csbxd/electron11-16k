@@ -35,7 +35,9 @@ Run the GitHub Actions workflow manually, or push a tag such as
 The historical Chromium checkout and a full optimized build can exceed one
 standard GitHub-hosted runner's six-hour lifetime. CI therefore keeps source
 sync and compilation on the same runner, bounds each Ninja compilation slice,
-and resumes completed Ninja outputs from an exact-input Actions cache.
+and resumes completed Ninja outputs from an exact-input Actions cache. Fresh
+checkout timestamps are normalized to the Electron release time before cache
+restore, preserving Ninja's output and dependency-log timestamp invariants.
 
 ## Verification
 

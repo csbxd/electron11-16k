@@ -44,6 +44,9 @@ jobs:
             electron11-16k-builder \
             ./scripts/sync.sh
 
+      - name: Normalize source timestamps for incremental output
+        run: ./scripts/normalize-source-mtimes.sh
+
       - name: Restore partial Ninja output
         uses: actions/cache/restore@v4
         with:
@@ -52,9 +55,6 @@ jobs:
           restore-keys: |
             electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-
             electron11-arm64-16k-out-
-
-      - name: Refresh restored Ninja metadata
-        run: ./scripts/restore-ninja-output.sh
 
       - name: Build Electron 11.3.0 for ARM64
         id: electron-build
