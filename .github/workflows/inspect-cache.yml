@@ -1,0 +1,50 @@
+name: Inspect Ninja cache
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Ninja output
+        uses: actions/cache/restore@v4
+        with:
+          path: .build/checkout/src/out/Release
+          key: electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-empty
+          restore-keys: |
+            electron11-arm64-16k-out-${{ hashFiles('Dockerfile', 'scripts/sync.sh', 'patches/*.patch') }}-
+
+      - name: Inspect restored metadata
+        run: |
+          release=.build/checkout/src/out/Release
+          du -sh "${release}"
+          find "${release}" -type f | wc -l
+          find "${release}" -type f -name '*.o' | wc -l
+          ls -l "${release}"/.ninja_log "${release}"/.ninja_deps
+          head -n 5 "${release}"/.ninja_log
+          tail -n 5 "${release}"/.ninja_log
+          RELEASE="${release}" python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          release = Path(os.environ["RELEASE"])
+          entries = []
+          for line in (release / ".ninja_log").read_text().splitlines()[1:]:
+              fields = line.split("\t")
+              if len(fields) >= 5:
+                  entries.append(fields[3])
+          relative = sum((release / output).exists() for output in entries)
+          workspace = Path.cwd()
+          workspace_relative = sum((workspace / output).exists() for output in entries)
+          print(f"log entries={len(entries)}")
+          print(f"existing relative to Release={relative}")
+          print(f"existing relative to workspace={workspace_relative}")
+          print("sample outputs:")
+          print("\n".join(entries[-20:]))
+          PY
