@@ -6,7 +6,8 @@ repo_root="$(cd "${script_dir}/.." && pwd)"
 dist_root="${repo_root}/dist"
 source_zip="${dist_root}/electron-v11.3.0-linux-arm64-16k.zip"
 stage_root="${dist_root}/runtime"
-archive="${dist_root}/electron-v11.3.0-linux-arm64-16k.tar.xz"
+archive_name="electron-v11.3.0-linux-arm64-16k.tar.xz"
+archive="${dist_root}/${archive_name}"
 
 [[ -f "${source_zip}" ]] || {
 	echo "missing ${source_zip}" >&2
@@ -30,4 +31,7 @@ printf '%s\n' \
 
 tar --sort=name --mtime='@1613779153' --owner=0 --group=0 --numeric-owner \
 	-cJf "${archive}" -C "${stage_root}" .
-sha256sum "${archive}" > "${archive}.sha256"
+(
+	cd "${dist_root}"
+	sha256sum "${archive_name}" > "${archive_name}.sha256"
+)
